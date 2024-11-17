@@ -407,7 +407,7 @@ export default function Home() {
                         <div className="flex-grow h-[1px] bg-white/40 rounded-r-full"/>
                     </div>
                     <div className="flex flex-col gap-5">
-                        {_patient?.alerts.map((alert, i) => (
+                        {/* {_patient?.alerts.map((alert, i) => (
                             <div
                                 key={i}
                                 className="bg-white/5 rounded-2xl p-4 backdrop-blur-sm"
@@ -440,7 +440,7 @@ export default function Home() {
                                     {alert.description}
                                 </div>
                             </div>
-                        ))}
+                        ))} */}
                     </div>
                 </div>
                 <div className="w-full h-full flex flex-col pt-12">
