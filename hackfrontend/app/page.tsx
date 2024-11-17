@@ -33,6 +33,8 @@ import { Plus } from "lucide-react";
 import MealsSummary from "./MealsSummary";
 import ChatInput from "./ChatInput";
 
+const images = ['/P1.jpg', '/P2.jpg', '/P3.jpg'];
+
 var sampleMeals = [
   {
     date: "2024-11-17",
@@ -165,7 +167,7 @@ export default function Home() {
     const [scrollDepth, setScrollDepth] = useState(0);
     const [currentView, setCurrentView] = useState(0);
     const [_patient, setPatient] = useState<Patient | null>(patients[0]);
-    const [patData, setPatData] = useState<Patient[] | null>(patients);
+    const [patData, setPatData] = useState<any>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     const openModal = () => {
@@ -178,12 +180,13 @@ export default function Home() {
 
     async function loadSpecificPatient(patient) {
         setPatient(patient);
+        console.log(patient.phone_number);
         const messagePayload = {
-            phone_number: _patient?.phone_number
+            phone_number: patient.phone_number
         }
         try {
             const response = await fetch('https://discrete-deer-obliging.ngrok-free.app/get_patient_data', {
-                method: 'GET',
+                method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                   },
@@ -191,7 +194,7 @@ export default function Home() {
             });
             if (response.ok) {
                 const data = await response.json();
-                setPatData(data);
+                // setPatData(userArray);
                 console.log('User added successfully:', data);
             } else {
                 console.log('Failed to add user:', response.statusText);
@@ -203,23 +206,35 @@ export default function Home() {
 
     async function loadAllPatientData() {
         try {
-            const response = await fetch('https://discrete-deer-obliging.ngrok-free.app/get_all_patient_data', {
-                method: 'GET',
+            const response = await fetch('https://discrete-deer-obliging.ngrok-free.app/get_all_data', {
+                method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                  },
+                    },
             });
             if (response.ok) {
-                console.log(response)
-                console.log(response.body)
                 const data = await response.json();
-                setPatData(data);
-                console.log('User added successfully:', data);
+                const userArray = Object.keys(data.data).map(key => {
+                    const user = data.data[key].user;
+                    const meals = data.data[key].meals;
+                    const summary = data.data[key].summary;
+                    return {
+                        user_id: user.user_id,
+                        name: user.name,
+                        health_goal: user.health_goal,
+                        phone_number: user.phone_number,
+                        created_at: user.created_at,
+                        meals,
+                        summary
+                    };
+                });
+                setPatData(userArray);
+                console.log('all data got:', data);
             } else {
-                console.log('Failed to add user:', response.statusText);
+                console.log('all data not got:', response.statusText);
             }
         } catch (error) {
-            console.error('Error:', error);
+            console.error('bad error all data:', error);
         }
     }
 
@@ -242,14 +257,9 @@ export default function Home() {
 
     const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-    const ws = useRef<WebSocket | null>(null);
     const dataPoint = useRef<Object | null>(null);
 
     useEffect(() => {
-        ws.current = new WebSocket("ws://localhost:8087");
-        ws.current.onmessage = (e) => {
-            dataPoint.current = JSON.parse(e.data);
-        }
         loadAllPatientData();
     }, []);
 
@@ -451,9 +461,9 @@ export default function Home() {
                         className="w-full flex-grow backdrop-blur-sm bg-white/5 p-6  rounded-2xl shadow-lg relative flex flex-col gap-8">
                         <div
                             className="absolute top-0 left-0 w-full h-full pointer-events-none border border-[#d0ffffa1] mask-gradient rounded-2xl"/>
-                        {patients.map((patient) => (
+                        {patients.map((patient, index) => (
                             <div
-                                onClick={() => loadSpecificPatient(patient)}
+                                onClick={() => setPatient(patient)}
                                 className={
                                     "flex gap-6 items-center cursor-pointer transition-all " +
                                     (_patient == patient && "bg-white/5 rounded-full")
@@ -464,12 +474,36 @@ export default function Home() {
                                     className="rounded-full"
                                     width={50}
                                     height={50}
-                                    src={patient.img}
+                                    src={images[index]}
                                     alt={patient.name}
                                 />
                                 <span className="text-white text-[16px]">{patient.name}</span>
                             </div>
                         ))}
+                        {
+                            patData.length > 0 &&
+                            // console.log(patData[0].name) &&
+                            // console.log(patData) &&
+                            patData.map((patient) => (
+                                <div
+                                    onClick={() => loadSpecificPatient(patient)}
+                                    className={
+                                        "flex gap-6 items-center cursor-pointer transition-all " +
+                                        (_patient == patient && "bg-white/5 rounded-full")
+                                    }
+                                    key={patient.name}
+                                >
+                                    <Image
+                                        className="rounded-full"
+                                        width={50}
+                                        height={50}
+                                        src = {"/a.png"}
+                                        alt={patient.name}
+                                    />
+                                    <span className="text-white text-[16px]">{patient.name}</span>
+                                </div>
+                            ))
+                        }
                         <div
                                 onClick={() => {
                                     openModal()
