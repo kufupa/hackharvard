@@ -176,15 +176,42 @@ export default function Home() {
       setIsModalOpen(false);
     };
 
-    async function loadPatientData() {
+    async function loadSpecificPatient(patient) {
+        setPatient(patient);
+        const messagePayload = {
+            phone_number: _patient?.phone_number
+        }
         try {
             const response = await fetch('https://discrete-deer-obliging.ngrok-free.app/get_patient_data', {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
-                  }
+                  },
+                body: JSON.stringify(messagePayload),
             });
             if (response.ok) {
+                const data = await response.json();
+                setPatData(data);
+                console.log('User added successfully:', data);
+            } else {
+                console.log('Failed to add user:', response.statusText);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
+
+    async function loadAllPatientData() {
+        try {
+            const response = await fetch('https://discrete-deer-obliging.ngrok-free.app/get_all_patient_data', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                  },
+            });
+            if (response.ok) {
+                console.log(response)
+                console.log(response.body)
                 const data = await response.json();
                 setPatData(data);
                 console.log('User added successfully:', data);
@@ -223,7 +250,7 @@ export default function Home() {
         ws.current.onmessage = (e) => {
             dataPoint.current = JSON.parse(e.data);
         }
-        loadPatientData();
+        loadAllPatientData();
     }, []);
 
     useLayoutEffect(() => {
@@ -369,7 +396,7 @@ export default function Home() {
                         className="absolute top-0 left-0 w-full h-full border border-[#d0ffffa1] mask-gradient-2 rounded-2xl"
                     />
                     <MealsSummary meals={sampleMeals} />
-                    
+
                     <ChatInput number={"+447505014078"} />
                     </div>
                     <div
@@ -426,7 +453,7 @@ export default function Home() {
                             className="absolute top-0 left-0 w-full h-full pointer-events-none border border-[#d0ffffa1] mask-gradient rounded-2xl"/>
                         {patients.map((patient) => (
                             <div
-                                onClick={() => setPatient(patient)}
+                                onClick={() => loadSpecificPatient(patient)}
                                 className={
                                     "flex gap-6 items-center cursor-pointer transition-all " +
                                     (_patient == patient && "bg-white/5 rounded-full")
